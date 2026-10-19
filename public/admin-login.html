@@ -3,32 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Admin Login - RS Furniture</title>
-
     <script src="https://cdn.tailwindcss.com"></script>
-
+    <script>
+        // Cek jika sudah login, langsung alihkan ke halaman admin
+        if (sessionStorage.getItem("rsFurnitureAdmin") === "true" || localStorage.getItem("rsFurnitureAdmin") === "true") {
+            window.location.replace("/admin.html");
+        }
+    </script>
     <style>
         body {
-            background:
-                radial-gradient(
-                    circle at top,
-                    rgba(146, 64, 14, 0.15),
-                    transparent 45%
-                ),
-                #f5f5f4;
+            background: radial-gradient(circle at top, rgba(146, 64, 14, 0.15), transparent 50%), #f8f6f4;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         }
 
         .login-card {
-            animation: fadeIn 0.4s ease;
+            animation: fadeIn 0.4s ease-out;
         }
 
         @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(15px);
+                transform: translateY(16px);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -40,280 +37,456 @@
         }
 
         @keyframes shake {
-            0%, 100% {
-                transform: translateX(0);
-            }
-
-            25% {
-                transform: translateX(-7px);
-            }
-
-            75% {
-                transform: translateX(7px);
-            }
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-5px); }
+            80% { transform: translateX(5px); }
         }
     </style>
 </head>
 
-<body class="min-h-screen flex items-center justify-center px-4">
+<body class="min-h-screen flex items-center justify-center p-4">
 
-    <div class="login-card w-full max-w-md">
+    <div class="login-card w-full max-w-md my-8">
 
-        <!-- Logo / Brand -->
-
+        <!-- Logo / Brand Header -->
         <div class="text-center mb-6">
-
-            <div class="inline-flex items-center justify-center
-                        w-16 h-16 rounded-2xl
-                        bg-amber-900 text-white
-                        shadow-lg mb-4">
-
-                <span class="text-2xl font-black">
-                    RS
-                </span>
-
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-amber-900 text-white shadow-xl shadow-amber-900/20 mb-3 border border-amber-800">
+                <span class="text-2xl font-black tracking-wider">RS</span>
             </div>
-
-            <h1 class="text-2xl font-black text-gray-900">
-                RS FURNITURE
-            </h1>
-
-            <p class="text-sm text-gray-500 mt-1">
-                Panel Administrasi
-            </p>
-
+            <h1 class="text-2xl font-black text-stone-900 tracking-tight">RS FURNITURE</h1>
+            <p class="text-xs uppercase tracking-widest text-amber-800 font-semibold mt-0.5">Portal Administrasi</p>
         </div>
 
-
-        <!-- Login Card -->
-
-        <div id="loginCard"
-             class="bg-white rounded-2xl border border-stone-200
-                    shadow-xl p-6 sm:p-8">
-
+        <!-- Main Card Container -->
+        <div id="cardBox" class="bg-white rounded-2xl border border-stone-200/80 shadow-2xl shadow-stone-300/50 p-6 sm:p-8 backdrop-blur">
+            
             <div class="text-center mb-6">
-
-                <div class="text-4xl mb-3">
-                    🔐
+                <div class="w-12 h-12 bg-amber-50 text-amber-900 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-inner">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
                 </div>
-
-                <h2 class="text-xl font-bold text-gray-900">
-                    Masukkan PIN Admin
-                </h2>
-
-                <p class="text-sm text-gray-500 mt-2">
-                    Masukkan PIN untuk mengakses panel admin.
-                </p>
-
+                <h2 class="text-xl font-bold text-stone-900">Masuk Akun Admin</h2>
+                <p class="text-xs text-stone-500 mt-1">Gunakan akun admin untuk mengelola katalog produk</p>
             </div>
 
+            <!-- Tabs: Username/Password vs PIN Cepat -->
+            <div class="flex bg-stone-100 p-1 rounded-xl mb-5 text-xs font-semibold">
+                <button type="button" id="tabUserPass" class="flex-1 py-2 rounded-lg bg-white text-stone-900 shadow-sm transition">
+                    Username & Password
+                </button>
+                <button type="button" id="tabPin" class="flex-1 py-2 rounded-lg text-stone-500 hover:text-stone-800 transition">
+                    PIN Cepat
+                </button>
+            </div>
 
-            <!-- PIN Form -->
+            <!-- Error Notification Alert -->
+            <div id="alertError" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-start gap-2.5">
+                <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+                <span id="errorMessage">Username atau password yang dimasukkan salah.</span>
+            </div>
 
-            <form id="loginForm">
+            <!-- Success Notification Alert -->
+            <div id="alertSuccess" class="hidden mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-700 flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span>Login berhasil! Mengalihkan ke panel admin...</span>
+            </div>
 
-                <label
-                    for="pinInput"
-                    class="block text-sm font-semibold text-gray-700 mb-2"
-                >
-                    PIN Admin
-                </label>
-
-
-                <div class="relative">
-
-                    <input
-                        id="pinInput"
-                        type="password"
-                        inputmode="numeric"
-                        autocomplete="off"
-                        maxlength="6"
-                        placeholder="••••••"
-                        class="w-full px-4 py-3 pr-12
-                               border border-stone-300
-                               rounded-xl
-                               text-center text-xl tracking-[0.5em]
-                               font-bold
-                               focus:outline-none
-                               focus:ring-2
-                               focus:ring-amber-700
-                               focus:border-amber-700"
-                        required
-                    >
-
-                    <button
-                        type="button"
-                        id="togglePin"
-                        class="absolute right-3 top-1/2
-                               -translate-y-1/2
-                               text-gray-400
-                               hover:text-gray-700"
-                    >
-                        👁
-                    </button>
-
+            <!-- FORM 1: USERNAME & PASSWORD -->
+            <form id="formUserPass" class="space-y-4">
+                <div>
+                    <label for="usernameInput" class="block text-xs font-bold text-stone-700 mb-1.5 uppercase tracking-wider">
+                        Username
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                        </span>
+                        <input
+                            type="text"
+                            id="usernameInput"
+                            name="username"
+                            required
+                            placeholder="Contoh: admin"
+                            class="w-full pl-10 pr-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800 transition"
+                        >
+                    </div>
                 </div>
 
-
-                <!-- Error -->
-
-                <div
-                    id="errorMessage"
-                    class="hidden mt-3 text-sm text-red-600
-                           bg-red-50 border border-red-200
-                           rounded-lg p-3 text-center"
-                >
-                    PIN yang kamu masukkan salah.
+                <div>
+                    <label for="passwordInput" class="block text-xs font-bold text-stone-700 mb-1.5 uppercase tracking-wider">
+                        Password
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            </svg>
+                        </span>
+                        <input
+                            type="password"
+                            id="passwordInput"
+                            name="password"
+                            required
+                            placeholder="••••••••"
+                            class="w-full pl-10 pr-10 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800 transition"
+                        >
+                        <button
+                            type="button"
+                            id="togglePassword"
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-stone-400 hover:text-stone-700 focus:outline-none"
+                            aria-label="Tampilkan Password"
+                        >
+                            <svg id="eyeIconOpen" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                            <svg id="eyeIconClosed" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
-
-                <!-- Button -->
+                <div class="flex items-center justify-between text-xs pt-1">
+                    <label class="flex items-center gap-2 cursor-pointer text-stone-600 select-none">
+                        <input type="checkbox" id="rememberMe" class="rounded text-amber-900 focus:ring-amber-800 border-stone-300">
+                        <span>Ingat saya di browser ini</span>
+                    </label>
+                </div>
 
                 <button
                     type="submit"
-                    class="w-full mt-5
-                           bg-amber-900
-                           hover:bg-amber-950
-                           text-white
-                           font-bold
-                           py-3
-                           rounded-xl
-                           transition
-                           shadow-lg"
+                    id="btnSubmitUserPass"
+                    class="w-full bg-amber-900 hover:bg-amber-950 text-white font-bold py-3 rounded-xl transition duration-150 shadow-lg shadow-amber-950/20 flex items-center justify-center gap-2 text-sm mt-2"
                 >
-                    Masuk ke Panel Admin
+                    <span class="btn-text">Masuk ke Panel Admin</span>
+                    <svg class="btn-spinner hidden animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                    </svg>
                 </button>
-
             </form>
 
+            <!-- FORM 2: PIN CEPAT -->
+            <form id="formPin" class="space-y-4 hidden">
+                <div>
+                    <label for="pinInput" class="block text-xs font-bold text-stone-700 mb-1.5 uppercase tracking-wider text-center">
+                        PIN Rahasia Admin
+                    </label>
+                    <div class="relative">
+                        <input
+                            type="password"
+                            id="pinInput"
+                            name="pin"
+                            inputmode="numeric"
+                            autocomplete="off"
+                            maxlength="6"
+                            placeholder="••••••"
+                            class="w-full px-4 py-3.5 pr-11 border border-stone-300 rounded-xl text-center text-2xl tracking-[0.4em] font-bold bg-stone-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800 transition"
+                        >
+                        <button
+                            type="button"
+                            id="togglePin"
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-stone-400 hover:text-stone-700 focus:outline-none"
+                            aria-label="Tampilkan PIN"
+                        >
+                            <svg id="eyePinOpen" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                            <svg id="eyePinClosed" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-stone-400 text-center mt-2">Masukkan 6 digit kode keamanan admin</p>
+                </div>
 
-            <!-- Back -->
-
-            <a
-                href="/"
-                class="block text-center
-                       text-sm text-gray-500
-                       hover:text-amber-800
-                       mt-5"
-            >
-                ← Kembali ke Katalog
-            </a>
+                <button
+                    type="submit"
+                    id="btnSubmitPin"
+                    class="w-full bg-amber-900 hover:bg-amber-950 text-white font-bold py-3 rounded-xl transition duration-150 shadow-lg shadow-amber-950/20 flex items-center justify-center gap-2 text-sm mt-2"
+                >
+                    <span class="btn-text">Verifikasi PIN & Masuk</span>
+                    <svg class="btn-spinner hidden animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                    </svg>
+                </button>
+            </form>
 
         </div>
 
-
-        <p class="text-center text-xs text-gray-400 mt-5">
-            © 2026 RS Furniture
-        </p>
+        <!-- Back to Public Catalog -->
+        <div class="text-center mt-6">
+            <a href="/" class="inline-flex items-center gap-1.5 text-xs text-stone-500 hover:text-amber-900 font-semibold transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Kembali ke Katalog RS Furniture
+            </a>
+            <p class="text-[11px] text-stone-400 mt-3">
+                &copy; 2026 RS Furniture &bull; Panel Akses Terbatas
+            </p>
+        </div>
 
     </div>
 
-
+    <!-- Script Logika Login -->
     <script>
+        // Default Fallback Credentials (diselaraskan dengan server.js & .env)
+        const DEFAULT_USERNAME = "admin";
+        const DEFAULT_PASSWORD = "admin123";
+        const DEFAULT_PIN = "211204";
 
-        // ==========================================
-        // PIN ADMIN
-        // ==========================================
-
-        const ADMIN_PIN = "211204";
-
-
-        // ==========================================
-        // ELEMENTS
-        // ==========================================
-
-        const loginForm = document.getElementById("loginForm");
-
-        const pinInput = document.getElementById("pinInput");
-
+        // Elements
+        const cardBox = document.getElementById("cardBox");
+        const alertError = document.getElementById("alertError");
         const errorMessage = document.getElementById("errorMessage");
+        const alertSuccess = document.getElementById("alertSuccess");
 
-        const loginCard = document.getElementById("loginCard");
+        const tabUserPass = document.getElementById("tabUserPass");
+        const tabPin = document.getElementById("tabPin");
+        const formUserPass = document.getElementById("formUserPass");
+        const formPin = document.getElementById("formPin");
+
+        const usernameInput = document.getElementById("usernameInput");
+        const passwordInput = document.getElementById("passwordInput");
+        const pinInput = document.getElementById("pinInput");
+        const rememberMe = document.getElementById("rememberMe");
+
+        const togglePassword = document.getElementById("togglePassword");
+        const eyeIconOpen = document.getElementById("eyeIconOpen");
+        const eyeIconClosed = document.getElementById("eyeIconClosed");
 
         const togglePin = document.getElementById("togglePin");
+        const eyePinOpen = document.getElementById("eyePinOpen");
+        const eyePinClosed = document.getElementById("eyePinClosed");
 
+        const btnSubmitUserPass = document.getElementById("btnSubmitUserPass");
+        const btnSubmitPin = document.getElementById("btnSubmitPin");
+        const btnAutoFill = document.getElementById("btnAutoFill");
 
-        // ==========================================
-        // SHOW / HIDE PIN
-        // ==========================================
+        // Tab Switching Logic
+        tabUserPass.addEventListener("click", () => {
+            tabUserPass.className = "flex-1 py-2 rounded-lg bg-white text-stone-900 shadow-sm transition";
+            tabPin.className = "flex-1 py-2 rounded-lg text-stone-500 hover:text-stone-800 transition";
+            formUserPass.classList.remove("hidden");
+            formPin.classList.add("hidden");
+            hideAlerts();
+            usernameInput.focus();
+        });
 
-        togglePin.addEventListener("click", () => {
-
-            if (pinInput.type === "password") {
-
-                pinInput.type = "text";
-
-                togglePin.textContent = "🙈";
-
-            } else {
-
-                pinInput.type = "password";
-
-                togglePin.textContent = "👁";
-
-            }
-
+        tabPin.addEventListener("click", () => {
+            tabPin.className = "flex-1 py-2 rounded-lg bg-white text-stone-900 shadow-sm transition";
+            tabUserPass.className = "flex-1 py-2 rounded-lg text-stone-500 hover:text-stone-800 transition";
+            formPin.classList.remove("hidden");
+            formUserPass.classList.add("hidden");
+            hideAlerts();
             pinInput.focus();
-
         });
 
-
-        // ==========================================
-        // LOGIN
-        // ==========================================
-
-        loginForm.addEventListener("submit", (event) => {
-
-            event.preventDefault();
-
-
-            const enteredPin = pinInput.value.trim();
-
-
-            // Reset error
-
-            errorMessage.classList.add("hidden");
-
-            loginCard.classList.remove("shake");
-
-
-            // Cek PIN
-
-            if (enteredPin === ADMIN_PIN) {
-
-                // Simpan status login
-                sessionStorage.setItem(
-                    "rsFurnitureAdmin",
-                    "true"
-                );
-
-
-                // Masuk admin
-
-                window.location.href = "/admin.html";
-
+        // Show/Hide Password
+        togglePassword.addEventListener("click", () => {
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                eyeIconOpen.classList.add("hidden");
+                eyeIconClosed.classList.remove("hidden");
             } else {
+                passwordInput.type = "password";
+                eyeIconOpen.classList.remove("hidden");
+                eyeIconClosed.classList.add("hidden");
+            }
+            passwordInput.focus();
+        });
 
-                errorMessage.classList.remove("hidden");
+        // Show/Hide PIN
+        togglePin.addEventListener("click", () => {
+            if (pinInput.type === "password") {
+                pinInput.type = "text";
+                eyePinOpen.classList.add("hidden");
+                eyePinClosed.classList.remove("hidden");
+            } else {
+                pinInput.type = "password";
+                eyePinOpen.classList.remove("hidden");
+                eyePinClosed.classList.add("hidden");
+            }
+            pinInput.focus();
+        });
 
-                loginCard.classList.add("shake");
+        // Helper: Alerts
+        function showError(msg) {
+            errorMessage.textContent = msg;
+            alertError.classList.remove("hidden");
+            alertSuccess.classList.add("hidden");
+            cardBox.classList.remove("shake");
+            void cardBox.offsetWidth; // Trigger reflow for animation restart
+            cardBox.classList.add("shake");
+        }
 
-                pinInput.value = "";
+        function showSuccess() {
+            alertError.classList.add("hidden");
+            alertSuccess.classList.remove("hidden");
+        }
 
-                pinInput.focus();
+        function hideAlerts() {
+            alertError.classList.add("hidden");
+            alertSuccess.classList.add("hidden");
+            cardBox.classList.remove("shake");
+        }
 
+        function setButtonLoading(btn, isLoading) {
+            const textSpan = btn.querySelector(".btn-text");
+            const spinner = btn.querySelector(".btn-spinner");
+            btn.disabled = isLoading;
+            if (isLoading) {
+                textSpan.classList.add("opacity-60");
+                spinner.classList.remove("hidden");
+            } else {
+                textSpan.classList.remove("opacity-60");
+                spinner.classList.add("hidden");
+            }
+        }
+
+        // Simpan sesi autentikasi admin
+        function saveAuthSession(token, username) {
+            sessionStorage.setItem("rsFurnitureAdmin", "true");
+            sessionStorage.setItem("rsAdminUser", username || "admin");
+            if (token) sessionStorage.setItem("rsAdminToken", token);
+
+            if (rememberMe && rememberMe.checked) {
+                localStorage.setItem("rsFurnitureAdmin", "true");
+                localStorage.setItem("rsAdminUser", username || "admin");
+                if (token) localStorage.setItem("rsAdminToken", token);
+            }
+        }
+
+        // Handler Submit: Username & Password
+        formUserPass.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            hideAlerts();
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            if (!username || !password) {
+                showError("Mohon masukkan username dan password.");
+                return;
             }
 
+            setButtonLoading(btnSubmitUserPass, true);
+
+            try {
+                const response = await fetch("/api/admin/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    saveAuthSession(data.token, username);
+                    showSuccess();
+                    setTimeout(() => {
+                        window.location.href = "/admin.html";
+                    }, 600);
+                } else {
+                    showError(data.message || "Username atau password admin salah!");
+                    setButtonLoading(btnSubmitUserPass, false);
+                    passwordInput.value = "";
+                    passwordInput.focus();
+                }
+            } catch (err) {
+                // Fallback jika API sedang offline / standalone
+                if ((username === DEFAULT_USERNAME && (password === DEFAULT_PASSWORD || password === DEFAULT_PIN))) {
+                    saveAuthSession("offline-token-" + Date.now(), username);
+                    showSuccess();
+                    setTimeout(() => {
+                        window.location.href = "/admin.html";
+                    }, 600);
+                } else {
+                    showError("Username atau password admin salah!");
+                    setButtonLoading(btnSubmitUserPass, false);
+                    passwordInput.value = "";
+                    passwordInput.focus();
+                }
+            }
         });
 
+        // Handler Submit: PIN Cepat
+        formPin.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            hideAlerts();
+            const pin = pinInput.value.trim();
 
-        // ==========================================
-        // AUTO FOCUS
-        // ==========================================
+            if (!pin) {
+                showError("Mohon masukkan 6 digit PIN admin.");
+                return;
+            }
 
-        pinInput.focus();
+            setButtonLoading(btnSubmitPin, true);
 
+            try {
+                const response = await fetch("/api/admin/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ pin })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    saveAuthSession(data.token, "admin");
+                    showSuccess();
+                    setTimeout(() => {
+                        window.location.href = "/admin.html";
+                    }, 600);
+                } else {
+                    showError(data.message || "PIN admin yang kamu masukkan salah!");
+                    setButtonLoading(btnSubmitPin, false);
+                    pinInput.value = "";
+                    pinInput.focus();
+                }
+            } catch (err) {
+                // Fallback jika API sedang offline
+                if (pin === DEFAULT_PIN) {
+                    saveAuthSession("offline-pin-" + Date.now(), "admin");
+                    showSuccess();
+                    setTimeout(() => {
+                        window.location.href = "/admin.html";
+                    }, 600);
+                } else {
+                    showError("PIN admin yang kamu masukkan salah!");
+                    setButtonLoading(btnSubmitPin, false);
+                    pinInput.value = "";
+                    pinInput.focus();
+                }
+            }
+        });
+
+        // Quick Auto-Fill Event
+        btnAutoFill.addEventListener("click", () => {
+            if (formUserPass.classList.contains("hidden")) {
+                pinInput.value = DEFAULT_PIN;
+                pinInput.focus();
+            } else {
+                usernameInput.value = DEFAULT_USERNAME;
+                passwordInput.value = DEFAULT_PASSWORD;
+                passwordInput.focus();
+            }
+        });
+
+        // Initial Focus
+        usernameInput.focus();
     </script>
-
 </body>
 </html>

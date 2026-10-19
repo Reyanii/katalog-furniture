@@ -5,12 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - RS Furniture</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Guard: Pastikan admin sudah login
+        if (sessionStorage.getItem("rsFurnitureAdmin") !== "true" && localStorage.getItem("rsFurnitureAdmin") !== "true") {
+            window.location.replace("/admin-login.html");
+        }
+    </script>
 </head>
 <body class="bg-gray-100 font-sans text-gray-800">
 
-    <nav class="bg-gray-900 text-white py-4 px-6 flex justify-between items-center">
-        <h1 class="text-xl font-bold">Admin Panel - RS Furniture</h1>
-        <a href="/" class="text-xs bg-gray-700 px-3 py-1.5 rounded hover:bg-gray-600">Lihat Catalog Publik</a>
+    <nav class="bg-gray-900 text-white py-4 px-6 flex flex-wrap justify-between items-center gap-3 shadow-md">
+        <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-lg bg-amber-800 text-white font-bold flex items-center justify-center text-sm shadow">RS</span>
+            <h1 class="text-lg md:text-xl font-bold tracking-tight">Admin Panel - RS Furniture</h1>
+        </div>
+        <div class="flex items-center gap-2.5">
+            <span id="adminGreeting" class="text-xs bg-gray-800 text-stone-300 px-3 py-1.5 rounded-lg border border-gray-700 hidden sm:inline-block">
+                Admin
+            </span>
+            <a href="/" class="text-xs bg-gray-800 hover:bg-gray-700 text-stone-200 px-3 py-1.5 rounded-lg border border-gray-700 transition">
+                Lihat Catalog Publik
+            </a>
+            <button onclick="logoutAdmin()" class="text-xs bg-red-600 hover:bg-red-700 text-white font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                </svg>
+                Logout
+            </button>
+        </div>
     </nav>
 
     <div class="max-w-6xl mx-auto my-8 p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -125,6 +147,24 @@
                 await fetch(`/api/produk/${id}`, { method: 'DELETE' });
                 loadAdminProducts();
             }
+        }
+
+        // Tampilkan username admin yang sedang login
+        const loggedUser = sessionStorage.getItem("rsAdminUser") || localStorage.getItem("rsAdminUser") || "Admin";
+        const greetingEl = document.getElementById("adminGreeting");
+        if (greetingEl) {
+            greetingEl.textContent = "Halo, " + loggedUser;
+        }
+
+        // Fungsi Logout
+        function logoutAdmin() {
+            sessionStorage.removeItem("rsFurnitureAdmin");
+            sessionStorage.removeItem("rsAdminUser");
+            sessionStorage.removeItem("rsAdminToken");
+            localStorage.removeItem("rsFurnitureAdmin");
+            localStorage.removeItem("rsAdminUser");
+            localStorage.removeItem("rsAdminToken");
+            window.location.href = "/admin-login.html";
         }
 
         loadAdminProducts();

@@ -13,6 +13,11 @@ const PORT = process.env.PORT || 3000;
 // Inisialisasi Groq SDK menggunakan API Key dari file .env
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
+// Kredensial Admin RS Furniture
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const ADMIN_PIN = process.env.ADMIN_PIN || '211204';
+
 // Setup direktori upload foto jika belum ada
 const uploadDir = path.join(__dirname, 'public/uploads');
 
@@ -409,6 +414,66 @@ Instruksi Respons:
             }
         }
     );
+});
+
+// ==========================================
+// API Endpoint Admin: Authentication
+// ==========================================
+app.post('/api/admin/login', (req, res) => {
+    const { username, password, pin } = req.body || {};
+
+    // 1. Cek Login via PIN
+    if (pin !== undefined && pin !== null && String(pin).trim() !== '') {
+        const cleanPin = String(pin).trim();
+        if (cleanPin === String(ADMIN_PIN).trim()) {
+            return res.json({
+                success: true,
+                message: 'Login berhasil!',
+                admin: { username: ADMIN_USERNAME },
+                token: 'rs-admin-auth-' + Buffer.from(`${ADMIN_USERNAME}:${Date.now()}`).toString('base64')
+            });
+        }
+        return res.status(401).json({
+            success: false,
+            message: 'PIN admin yang dimasukkan salah.'
+        });
+    }
+
+    // 2. Cek Login via Username & Password
+    if (!username || !password) {
+        return res.status(400).json({
+            success: false,
+            message: 'Username dan password wajib diisi.'
+        });
+    }
+
+    const cleanUsername = String(username).trim();
+    const cleanPassword = String(password).trim();
+
+    if (
+        (cleanUsername === ADMIN_USERNAME && cleanPassword === ADMIN_PASSWORD) ||
+        (cleanUsername === ADMIN_USERNAME && cleanPassword === ADMIN_PIN)
+    ) {
+        return res.json({
+            success: true,
+            message: 'Login berhasil!',
+            admin: { username: cleanUsername },
+            token: 'rs-admin-auth-' + Buffer.from(`${cleanUsername}:${Date.now()}`).toString('base64')
+        });
+    }
+
+    return res.status(401).json({
+        success: false,
+        message: 'Username atau password admin salah!'
+    });
+});
+
+// API Endpoint Admin: Verifikasi Sesi
+app.get('/api/admin/check', (req, res) => {
+    res.json({
+        status: 'active',
+        admin_ready: true
+    });
 });
 
 // API Endpoint Admin: Tambah Produk
